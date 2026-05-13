@@ -291,3 +291,6 @@ Cloudflare：
 - 本机 Docker daemon 未运行且未找到 Docker Desktop 应用，本地数据库点击流改到 VPS 部署后验证。
 - 已将 ESLint 9 配置改为 `eslint.config.mjs`，`npm run lint` 和 `npm run build` 均通过。
 - GitHub 仓库已创建并推送：`https://github.com/Mist-wu/saved-lists-cleaner`。
+- VPS 已安装 Docker Engine / Docker Compose plugin，应用容器和 PostgreSQL 容器已首次启动。
+- 生产入口当前使用 `http://178.128.90.49`，GitHub webhook 入口为 `http://178.128.90.49:9000/github`。
+- GitHub webhook 已创建，事件为 `push`，服务端 systemd 服务名为 `saved-lists-webhook.service`。
