@@ -28,7 +28,7 @@ function runDeploy() {
   }
 
   deploying = true;
-  const child = spawn("/bin/bash", ["/opt/saved-lists-cleaner/deploy/deploy.sh"], {
+  const child = spawn("/bin/bash", [`${repoDir}/deploy/deploy.sh`], {
     cwd: repoDir,
     stdio: "inherit",
     env: process.env,
