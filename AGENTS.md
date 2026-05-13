@@ -294,3 +294,4 @@ Cloudflare：
 - VPS 已安装 Docker Engine / Docker Compose plugin，应用容器和 PostgreSQL 容器已首次启动。
 - 生产入口当前使用 `http://178.128.90.49`，GitHub webhook 入口为 `http://178.128.90.49:9000/github`。
 - GitHub webhook 已创建，事件为 `push`，服务端 systemd 服务名为 `saved-lists-webhook.service`。
+- 已修复 webhook 部署脚本路径：webhook server 从 `REPO_DIR/deploy/deploy.sh` 执行部署。
