@@ -2,9 +2,9 @@ import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import http from "node:http";
 
-const port = Number(process.env.WEBHOOK_PORT ?? 9000);
+const port = Number(process.env.WEBHOOK_PORT || 9000);
 const secret = process.env.WEBHOOK_SECRET;
-const repoDir = process.env.REPO_DIR ?? "/opt/saved-lists-cleaner/app";
+const repoDir = process.env.REPO_DIR || "/opt/saved-lists-cleaner/app";
 
 if (!secret) {
   console.error("WEBHOOK_SECRET is required.");
