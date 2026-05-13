@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+.next/
+node_modules/
+coverage/
+dist/
+*.log
+.DS_Store
+deploy/.webhook-secret
+test/zhihu-oauth-import/.zhihu-profile/
+test/zhihu-oauth-import/output/
+test/zhihu-oauth-import/node_modules/
+/test/

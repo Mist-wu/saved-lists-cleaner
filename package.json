@@ -1,0 +1,33 @@
+{
+  "name": "saved-lists-cleaner",
+  "version": "0.1.0",
+  "description": "Read-only Zhihu public collection import, AI triage, and cleanup workspace.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "test:deepseek": "node scripts/deepseek_chat_test.mjs",
+    "test:zhihu:public": "node scripts/zhihu_public_collection_test.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.0",
+    "next": "16.2.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.2",
+    "eslint-config-next": "16.2.6",
+    "prisma": "6.19.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ImportRun {
+  id           String      @id @default(cuid())
+  source       String      @default("zhihu")
+  originalUrl  String
+  collectionId String
+  title        String?
+  status       String      @default("completed")
+  itemCount    Int         @default(0)
+  analyzedCount Int        @default(0)
+  healthScore  Int         @default(0)
+  summary      String      @default("")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  items        SavedItem[]
+
+  @@index([createdAt])
+  @@index([collectionId])
+}
+
+model SavedItem {
+  id               String    @id @default(cuid())
+  runId            String
+  platform         String    @default("zhihu")
+  platformItemId   String
+  type             String
+  title            String
+  url              String
+  excerpt          String    @default("")
+  authorName       String    @default("")
+  voteupCount      Int       @default(0)
+  commentCount     Int       @default(0)
+  collectTime      DateTime?
+  contentCreatedAt DateTime?
+  contentUpdatedAt DateTime?
+  aiAction         String    @default("unreviewed")
+  aiTags           Json      @default("[]")
+  aiReason         String    @default("")
+  aiSummary        String    @default("")
+  readMinutes      Int       @default(3)
+  qualityScore     Int       @default(50)
+  duplicateKey     String    @default("")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  run              ImportRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, platformItemId])
+  @@index([runId])
+  @@index([aiAction])
+}

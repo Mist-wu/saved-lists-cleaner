@@ -1,0 +1,15 @@
+[Unit]
+Description=saved-lists-cleaner GitHub webhook deploy service
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/saved-lists-cleaner/app
+EnvironmentFile=/opt/saved-lists-cleaner/webhook.env
+ExecStart=/usr/bin/node /opt/saved-lists-cleaner/app/deploy/webhook-server.mjs
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
