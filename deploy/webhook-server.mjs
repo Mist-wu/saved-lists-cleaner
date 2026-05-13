@@ -15,7 +15,7 @@ let deploying = false;
 let queued = false;
 
 function verifySignature(body, signature) {
-  if (!signature?.startsWith("sha256=")) return false;
+  if (!signature || !signature.startsWith("sha256=")) return false;
   const expected =
     "sha256=" + crypto.createHmac("sha256", secret).update(body).digest("hex");
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));

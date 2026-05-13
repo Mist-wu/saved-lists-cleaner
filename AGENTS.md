@@ -290,3 +290,4 @@ Cloudflare：
 - 本地验证通过：`npm run test:deepseek` 返回 `OK`；`npm run test:zhihu:public` 返回公开收藏夹 `totals=1060`；`npm run build` 通过。
 - 本机 Docker daemon 未运行且未找到 Docker Desktop 应用，本地数据库点击流改到 VPS 部署后验证。
 - 已将 ESLint 9 配置改为 `eslint.config.mjs`，`npm run lint` 和 `npm run build` 均通过。
+- GitHub 仓库已创建并推送：`https://github.com/Mist-wu/saved-lists-cleaner`。
