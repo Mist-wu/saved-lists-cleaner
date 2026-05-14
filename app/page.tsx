@@ -46,7 +46,7 @@ type ZhihuCollection = {
   id: string;
   title: string;
   description: string;
-  itemCount: number;
+  itemCount: number | null;
   url: string;
 };
 
@@ -214,7 +214,8 @@ export default function Home() {
                   onChange={() => setSelectedCollectionId(collection.id)}
                 />
                 <span>
-                  {collection.title} / ID {collection.id} / {collection.itemCount} 条
+                  {collection.title} / ID {collection.id} /{" "}
+                  {collection.itemCount == null ? "数量未知" : `${collection.itemCount} 条`}
                 </span>
               </label>
             ))}

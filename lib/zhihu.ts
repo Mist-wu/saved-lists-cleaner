@@ -55,7 +55,7 @@ export type ZhihuCollection = {
   id: string;
   title: string;
   description: string;
-  itemCount: number;
+  itemCount: number | null;
   url: string;
 };
 
@@ -219,7 +219,7 @@ function normalizeZhihuCollection(collection: z.infer<typeof zhihuCollectionSche
       asNumber(collection.items_count) ??
       asNumber(collection.answer_count) ??
       asNumber(collection.content_count) ??
-      0,
+      null,
     url: asString(collection.url) ?? `https://www.zhihu.com/collection/${id}`,
   };
 }
