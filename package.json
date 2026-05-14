@@ -12,7 +12,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "test:deepseek": "node scripts/deepseek_chat_test.mjs",
-    "test:zhihu:public": "node scripts/zhihu_public_collection_test.mjs"
+    "test:zhihu:public": "node scripts/zhihu_public_collection_test.mjs",
+    "test:zhihu:cookie-favorites": "node scripts/zhihu_cookie_favorites_test.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.0",
@@ -27,6 +28,8 @@
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.2",
     "eslint-config-next": "16.2.6",
+    "playwright": "^1.60.0",
+    "playwright": "^1.60.0",
     "prisma": "6.19.0",
     "typescript": "5.9.3"
   }
