@@ -251,6 +251,7 @@ Cloudflare：
 环境变量要求：
 
 - `APP_SECRET`：已在本地 `.env` 配置，用于加密本应用 session/token；不要把明文值写入 GitHub 或 AGENTS.md。
+- `DEEPSEEK_API_KEY`：DeepSeek OpenAPI 密钥，仅放 `.env` / 生产环境变量，勿提交仓库；调用方式见上文「Verified API Notes / DeepSeek」。
 - `ZHIHU_APP_ID`：知乎 OAuth app_id，待黑客松后台或商务渠道提供。
 - `ZHIHU_APP_KEY`：知乎 OAuth app_key，必须只放在 `.env` / `.env.production`，不要提交。
 - `ZHIHU_REDIRECT_URI`：建议配置为 `https://mistwu.com/api/zhihu/oauth/callback`，必须与知乎后台完全一致。
