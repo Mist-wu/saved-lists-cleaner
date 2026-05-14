@@ -150,7 +150,17 @@ export default function Home() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await response.json();
+      const raw = await response.text();
+      let data: ImportResponse & { error?: string };
+      try {
+        data = raw ? (JSON.parse(raw) as ImportResponse & { error?: string }) : ({} as ImportResponse & { error?: string });
+      } catch {
+        throw new Error(
+          !response.ok
+            ? "导入失败：服务器返回了非 JSON（常见于网关超时或 502）。收藏夹条目很多时耗时会变长，可稍后重试或使用 Chrome 再试。"
+            : "无法解析返回数据（可能响应过大或被代理截断）。可稍后重试或换浏览器。",
+        );
+      }
       if (!response.ok) {
         throw new Error(data.error ?? "导入失败");
       }
@@ -204,7 +214,7 @@ export default function Home() {
                   onChange={() => setSelectedCollectionId(collection.id)}
                 />
                 <span>
-                  {collection.title} / ID {collection.id} /{" "}
+                  {collection.title} /{" "}
                   {collection.itemCount == null ? "数量未知" : `${collection.itemCount} 条`}
                 </span>
               </label>

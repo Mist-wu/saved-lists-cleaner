@@ -37,32 +37,43 @@ export async function POST(request: Request) {
         analyzedCount: analyses.length,
         healthScore: summary.healthScore,
         summary: summary.summary,
-        items: {
-          create: collection.items.map((item) => {
-            const analysis = analysisById.get(item.platformItemId);
-            return {
-              platformItemId: item.platformItemId,
-              type: item.type,
-              title: item.title,
-              url: item.url,
-              excerpt: item.excerpt,
-              authorName: item.authorName,
-              voteupCount: item.voteupCount,
-              commentCount: item.commentCount,
-              collectTime: item.collectTime,
-              contentCreatedAt: item.contentCreatedAt,
-              contentUpdatedAt: item.contentUpdatedAt,
-              aiAction: analysis?.action ?? "unreviewed",
-              aiTags: analysis?.tags ?? [],
-              aiReason: analysis?.reason ?? "",
-              aiSummary: analysis?.summary ?? "",
-              readMinutes: analysis?.readMinutes ?? 3,
-              qualityScore: analysis?.qualityScore ?? 50,
-              duplicateKey: analysis?.duplicateKey ?? "",
-            };
-          }),
-        },
       },
+    });
+
+    const rows = collection.items.map((item) => {
+      const analysis = analysisById.get(item.platformItemId);
+      return {
+        runId: run.id,
+        platformItemId: item.platformItemId,
+        type: item.type,
+        title: item.title,
+        url: item.url,
+        excerpt: item.excerpt,
+        authorName: item.authorName,
+        voteupCount: item.voteupCount,
+        commentCount: item.commentCount,
+        collectTime: item.collectTime,
+        contentCreatedAt: item.contentCreatedAt,
+        contentUpdatedAt: item.contentUpdatedAt,
+        aiAction: analysis?.action ?? "unreviewed",
+        aiTags: analysis?.tags ?? [],
+        aiReason: analysis?.reason ?? "",
+        aiSummary: analysis?.summary ?? "",
+        readMinutes: analysis?.readMinutes ?? 3,
+        qualityScore: analysis?.qualityScore ?? 50,
+        duplicateKey: analysis?.duplicateKey ?? "",
+      };
+    });
+
+    const chunkSize = 500;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      await prisma.savedItem.createMany({
+        data: rows.slice(i, i + chunkSize),
+      });
+    }
+
+    const fullRun = await prisma.importRun.findUnique({
+      where: { id: run.id },
       include: {
         items: {
           orderBy: [{ aiAction: "asc" }, { qualityScore: "desc" }],
@@ -70,8 +81,12 @@ export async function POST(request: Request) {
       },
     });
 
+    if (!fullRun) {
+      throw new Error("导入已写入但无法读取运行记录，请稍后重试。");
+    }
+
     return NextResponse.json({
-      run,
+      run: fullRun,
       totals: {
         zhihuTotal: collection.total,
         imported: collection.items.length,

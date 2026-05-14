@@ -46,13 +46,22 @@ export async function analyzeItems(items: ZhihuCollectionItem[]): Promise<ItemAn
 
   const batches = chunk(items, 8);
   const results: ItemAnalysis[] = [];
+  const concurrency = 4;
 
-  for (const batch of batches) {
-    try {
-      results.push(...(await analyzeBatch(batch, apiKey)));
-    } catch (error) {
-      console.error("DeepSeek analysis failed, using heuristic fallback:", error);
-      results.push(...batch.map(heuristicAnalyze));
+  for (let i = 0; i < batches.length; i += concurrency) {
+    const group = batches.slice(i, i + concurrency);
+    const groupResults = await Promise.all(
+      group.map(async (batch) => {
+        try {
+          return await analyzeBatch(batch, apiKey);
+        } catch (error) {
+          console.error("DeepSeek analysis failed, using heuristic fallback:", error);
+          return batch.map(heuristicAnalyze);
+        }
+      }),
+    );
+    for (const analyses of groupResults) {
+      results.push(...analyses);
     }
   }
 
@@ -83,6 +92,31 @@ function countActions(analyses: ItemAnalysis[]) {
   }, {});
 }
 
+const ANALYSIS_TIME_ZONE = process.env.ANALYSIS_TIME_ZONE ?? "Asia/Shanghai";
+
+function analysisClockPayload() {
+  const now = new Date();
+  const longZh = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: ANALYSIS_TIME_ZONE,
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  }).format(now);
+  const isoDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ANALYSIS_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return {
+    timezone: ANALYSIS_TIME_ZONE,
+    todayISO: isoDate,
+    todayZh: longZh,
+    note: "判断「较新 / 过时 / 是否仍值得读」时，必须以 todayISO 为「今天」；结合每条 contentUpdatedAt；禁止按训练数据臆测当前年份。",
+  };
+}
+
 async function analyzeBatch(items: ZhihuCollectionItem[], apiKey: string): Promise<ItemAnalysis[]> {
   const response = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
@@ -98,11 +132,12 @@ async function analyzeBatch(items: ZhihuCollectionItem[], apiKey: string): Promi
         {
           role: "system",
           content:
-            "你是收藏夹清债助手。只返回 JSON。不要推荐新内容，只判断用户旧收藏是否值得处理、速读、删除、保留或归为过时/重复。",
+            "你是收藏夹清债助手。只返回 JSON。不要推荐新内容，只判断用户旧收藏是否值得处理、速读、删除、保留或归为过时/重复。用户消息里会给出「今天」的日期锚点（含时区）；凡涉及新旧的结论都必须相对该日期与条目 contentUpdatedAt，不得臆测当前年份。",
         },
         {
           role: "user",
           content: JSON.stringify({
+            analysisClock: analysisClockPayload(),
             schema: {
               items: [
                 {
