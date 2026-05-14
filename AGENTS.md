@@ -311,3 +311,4 @@ Cloudflare：
 - 服务器容器已切为 `127.0.0.1:3000:3000`，公网 80 由 Nginx 反代；已在 VPS 写入 `/etc/nginx/sites-available/default`，仓库记录模板为 `deploy/nginx-saved-lists-cleaner.conf`。
 - 线上实际点击测试已改用 HTTPS 域名 `https://mistwu.com`；公开 IP 的 HTTP 链路可能经 Nginx/域名规则跳转，不作为主验证入口。
 - 收藏夹列表接口本身不稳定返回 `item_count`，不能显示为 0 或未知；已改为列表返回后逐个请求 `/api/v4/collections/{id}/contents?limit=1&offset=0`，用 `paging.totals` 补真实数量。
+- 补数量逻辑只应读取 `paging.totals`，不要复用完整内容 item schema，否则单条内容字段波动会让数量补全失败。

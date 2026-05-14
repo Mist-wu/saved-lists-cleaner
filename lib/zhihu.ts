@@ -120,19 +120,25 @@ async function enrichZhihuCollectionCounts(collections: ZhihuCollection[], cooki
       if (collection.itemCount != null) return collection;
 
       try {
-        const endpoint = new URL(`https://www.zhihu.com/api/v4/collections/${collection.id}/contents`);
-        endpoint.searchParams.set("limit", "1");
-        endpoint.searchParams.set("offset", "0");
-        const parsed = zhihuResponseSchema.parse(await zhihuJson(endpoint, cookieHeader));
         return {
           ...collection,
-          itemCount: parsed.paging.totals,
+          itemCount: await fetchZhihuCollectionTotal(collection.id, cookieHeader),
         };
       } catch {
         return collection;
       }
     }),
   );
+}
+
+async function fetchZhihuCollectionTotal(collectionId: string, cookieHeader: string) {
+  const endpoint = new URL(`https://www.zhihu.com/api/v4/collections/${collectionId}/contents`);
+  endpoint.searchParams.set("limit", "1");
+  endpoint.searchParams.set("offset", "0");
+  const payload = asRecord(await zhihuJson(endpoint, cookieHeader));
+  const paging = asRecord(payload.paging);
+
+  return asNumber(paging.totals) ?? null;
 }
 
 async function listZhihuCollectionsFromEndpoint(initialUrl: string, cookieHeader: string) {
