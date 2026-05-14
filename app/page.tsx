@@ -187,11 +187,7 @@ export default function Home() {
         <button onClick={saveZhihuLogin} disabled={loading === "login" || !cookieHeader.trim()}>
           {loading === "login" ? "正在验证知乎登录态..." : "保存登录态"}
         </button>
-        {viewer ? (
-          <p>
-            当前知乎用户：{viewer.name} / {viewer.urlToken}
-          </p>
-        ) : null}
+        {viewer ? <p>当前知乎用户：{viewer.name}</p> : null}
         <p className="muted-strike">知乎官方能不能开放 OAuth 收藏夹获取接口啊</p>
       </section>
 
