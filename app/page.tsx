@@ -172,11 +172,10 @@ export default function Home() {
   return (
     <main>
       <h1>Saved Lists Cleaner</h1>
-      <p>知乎登录态读取收藏夹列表，用户选择后导入并用 DeepSeek 分析。当前版本只读，不做删除写操作。</p>
 
       <section>
         <h2>1. 登录知乎</h2>
-        <p>从已登录知乎的浏览器复制 Cookie 请求头，保存后服务器会加密存储，只用于 read-only 导入。</p>
+        <p>从已登录知乎的浏览器复制 Cookie 请求头，保存后服务器会加密存储，只用于收藏夹导入。</p>
         <label htmlFor="zhihu-cookie">知乎 Cookie</label>
         <textarea
           id="zhihu-cookie"
