@@ -192,6 +192,7 @@ export default function Home() {
             当前知乎用户：{viewer.name} / {viewer.urlToken}
           </p>
         ) : null}
+        <p className="muted-strike">知乎官方能不能开放 OAuth 收藏夹获取接口啊</p>
       </section>
 
       <section>

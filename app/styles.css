@@ -62,6 +62,13 @@ a {
   color: #0645ad;
 }
 
+.muted-strike {
+  margin: 16px 0 0;
+  color: #888;
+  text-decoration: line-through;
+  font-size: 0.95em;
+}
+
 fieldset {
   max-width: 760px;
   margin: 16px 0 0;
