@@ -105,13 +105,34 @@ export async function listZhihuCollections(cookieHeader: string, urlToken: strin
   for (const candidate of candidates) {
     try {
       const collections = await listZhihuCollectionsFromEndpoint(candidate, cookieHeader);
-      if (collections.length > 0) return collections;
+      if (collections.length > 0) return enrichZhihuCollectionCounts(collections, cookieHeader);
     } catch (error) {
       errors.push(error instanceof Error ? error.message : String(error));
     }
   }
 
   throw new Error(`未能读取知乎收藏夹列表：${errors.join(" / ") || "返回为空"}`);
+}
+
+async function enrichZhihuCollectionCounts(collections: ZhihuCollection[], cookieHeader: string) {
+  return Promise.all(
+    collections.map(async (collection) => {
+      if (collection.itemCount != null) return collection;
+
+      try {
+        const endpoint = new URL(`https://www.zhihu.com/api/v4/collections/${collection.id}/contents`);
+        endpoint.searchParams.set("limit", "1");
+        endpoint.searchParams.set("offset", "0");
+        const parsed = zhihuResponseSchema.parse(await zhihuJson(endpoint, cookieHeader));
+        return {
+          ...collection,
+          itemCount: parsed.paging.totals,
+        };
+      } catch {
+        return collection;
+      }
+    }),
+  );
 }
 
 async function listZhihuCollectionsFromEndpoint(initialUrl: string, cookieHeader: string) {

@@ -310,3 +310,4 @@ Cloudflare：
 - 线上入口当前仍是 `http://178.128.90.49`，生产环境不能默认设置 Secure app session cookie，否则浏览器不会保存；已改为通过 `APP_COOKIE_SECURE=true` 显式开启，后续接入 HTTPS 后再打开。
 - 服务器容器已切为 `127.0.0.1:3000:3000`，公网 80 由 Nginx 反代；已在 VPS 写入 `/etc/nginx/sites-available/default`，仓库记录模板为 `deploy/nginx-saved-lists-cleaner.conf`。
 - 线上实际点击测试已改用 HTTPS 域名 `https://mistwu.com`；公开 IP 的 HTTP 链路可能经 Nginx/域名规则跳转，不作为主验证入口。
+- 收藏夹列表接口本身不稳定返回 `item_count`，不能显示为 0 或未知；已改为列表返回后逐个请求 `/api/v4/collections/{id}/contents?limit=1&offset=0`，用 `paging.totals` 补真实数量。
