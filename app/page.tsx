@@ -100,7 +100,9 @@ export default function Home() {
       }
       setViewer(data.viewer);
       setCookieHeader("");
-      await loadCollections();
+      window.setTimeout(() => {
+        void loadCollections();
+      }, 150);
     } catch (err) {
       setError(err instanceof Error ? err.message : "知乎登录失败");
     } finally {
