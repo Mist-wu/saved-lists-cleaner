@@ -295,3 +295,7 @@ Cloudflare：
 - 生产入口当前使用 `http://178.128.90.49`，GitHub webhook 入口为 `http://178.128.90.49:9000/github`。
 - GitHub webhook 已创建，事件为 `push`，服务端 systemd 服务名为 `saved-lists-webhook.service`。
 - 已修复 webhook 部署脚本路径：webhook server 从 `REPO_DIR/deploy/deploy.sh` 执行部署。
+- GitHub webhook 自动部署验证通过：push 后 GitHub delivery 状态 `OK` / HTTP `202`，服务器仓库 HEAD 自动更新到最新提交。
+- 线上点击测试通过：访问 `http://178.128.90.49`，点击“开始导入”，页面展示体检报告和清理工作台。
+- 线上数据库写入验证通过：PostgreSQL 中 `ImportRun=2`、`SavedItem=24`，最近两次导入均为 `itemCount=12`、`analyzedCount=12`。
+- 线上容器状态：`app-app-1` 暴露 `80->3000`，`app-postgres-1` healthy；app 容器内 OpenSSL 已存在，Prisma OpenSSL warning 已消除。
