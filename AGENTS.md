@@ -307,3 +307,4 @@ Cloudflare：
 - 已开始实现后端登录态链路：`/api/zhihu/login` 保存知乎登录态，`/api/zhihu/collections` 读取收藏夹列表，`/api/import` 支持登录态收藏夹 ID 导入，同时保留公开收藏夹 URL fallback。
 - 部署排障发现服务器 Docker context 可能带入残留 `.next`，导致新增 API route 没进入运行镜像；已新增 `.dockerignore` 排除 `.next`、`node_modules`、本地知乎 profile、输出目录和 env 文件。
 - 线上页面点击验证时发现保存登录态后立刻拉取收藏夹存在 `Set-Cookie` 生效竞态，已改为保存成功后延迟触发收藏夹读取，并保留“获取收藏夹列表”按钮手动重试。
+- 线上入口当前仍是 `http://178.128.90.49`，生产环境不能默认设置 Secure app session cookie，否则浏览器不会保存；已改为通过 `APP_COOKIE_SECURE=true` 显式开启，后续接入 HTTPS 后再打开。
