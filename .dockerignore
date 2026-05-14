@@ -1,0 +1,10 @@
+.git
+.next
+node_modules
+npm-debug.log
+.env
+.env.local
+.env.production
+test/zhihu-oauth-import/.zhihu-profile
+test/zhihu-oauth-import/output
+test/zhihu-oauth-import/node_modules

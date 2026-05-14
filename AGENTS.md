@@ -305,3 +305,4 @@ Cloudflare：
 - 新当前执行目标：用户登录知乎 -> 获取用户的收藏夹列表 -> 用户选择要导入的收藏夹。
 - 实现方式仍为 read-only MVP：用户在页面粘贴已登录知乎浏览器 Cookie，本应用校验 `/api/v4/me`，将 Cookie 用 `APP_SECRET` 加密保存为本应用 HTTP-only session。
 - 已开始实现后端登录态链路：`/api/zhihu/login` 保存知乎登录态，`/api/zhihu/collections` 读取收藏夹列表，`/api/import` 支持登录态收藏夹 ID 导入，同时保留公开收藏夹 URL fallback。
+- 部署排障发现服务器 Docker context 可能带入残留 `.next`，导致新增 API route 没进入运行镜像；已新增 `.dockerignore` 排除 `.next`、`node_modules`、本地知乎 profile、输出目录和 env 文件。
