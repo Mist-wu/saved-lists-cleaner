@@ -66,7 +66,6 @@ export default function Home() {
   const [collections, setCollections] = useState<ZhihuCollection[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
   const [url, setUrl] = useState("https://www.zhihu.com/collection/21827231");
-  const [limit, setLimit] = useState(12);
   const [filter, setFilter] = useState("all");
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [loading, setLoading] = useState("");
@@ -154,7 +153,7 @@ export default function Home() {
       const response = await fetch("/api/import", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...payload, limit }),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -188,7 +187,7 @@ export default function Home() {
           {loading === "login" ? "正在验证知乎登录态..." : "保存登录态"}
         </button>
         {viewer ? <p>当前知乎用户：{viewer.name}</p> : null}
-        <p className="muted-strike">知乎官方能不能开放 OAuth 收藏夹获取接口啊</p>
+        <p className="muted-strike">知乎官方能不能开放 OAuth 收藏夹获取接(｀д´)</p>
       </section>
 
       <section>
@@ -223,16 +222,6 @@ export default function Home() {
 
       <section>
         <h2>3. 导入并分析</h2>
-        <label htmlFor="limit">导入数量</label>
-        <input
-          id="limit"
-          type="number"
-          min={5}
-          max={80}
-          value={limit}
-          onChange={(event) => setLimit(Number(event.target.value))}
-        />
-
         <button onClick={importSelectedCollection} disabled={loading === "import" || !selectedCollection}>
           {loading === "import" ? "正在导入并分析..." : "导入选中收藏夹"}
         </button>
@@ -257,10 +246,7 @@ export default function Home() {
           <section>
             <h2>体检报告</h2>
             <p>收藏夹：{result.run.title ?? result.run.collectionId}</p>
-            <p>收藏夹 ID：{result.run.collectionId}</p>
-            <p>知乎返回总数：{result.totals.zhihuTotal}</p>
-            <p>本次导入：{result.totals.imported}</p>
-            <p>AI 已分析：{result.run.analyzedCount}</p>
+            <p>已分析文章数量：{result.run.analyzedCount}</p>
             <p>健康度：{result.run.healthScore} / 100</p>
             <p>预计阅读：{totalReadMinutes} 分钟</p>
             <p>可快速清理：{quickCleanCount} 条</p>

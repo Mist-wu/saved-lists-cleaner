@@ -73,9 +73,12 @@ export function parseZhihuCollectionId(input: string): string {
   return match[1];
 }
 
-export async function fetchZhihuPublicCollection(inputUrl: string, maxItems = 40) {
+/** 未传 maxItems 时拉取收藏夹全部内容（分页至 is_end），最多 SAFETY_MAX_COLLECTION_ITEMS 条以防异常。 */
+const SAFETY_MAX_COLLECTION_ITEMS = 20_000;
+
+export async function fetchZhihuPublicCollection(inputUrl: string, maxItems?: number) {
   const collectionId = parseZhihuCollectionId(inputUrl);
-  return fetchZhihuCollectionContents(collectionId, { maxItems });
+  return fetchZhihuCollectionContents(collectionId, maxItems != null ? { maxItems } : {});
 }
 
 export async function getZhihuViewer(cookieHeader: string): Promise<ZhihuViewer> {
@@ -163,15 +166,17 @@ export async function fetchZhihuCollectionContents(
   collectionId: string,
   options: { maxItems?: number; cookieHeader?: string } = {},
 ) {
-  const maxItems = options.maxItems ?? 40;
+  const capped = options.maxItems != null;
+  const effectiveMax = capped ? options.maxItems! : SAFETY_MAX_COLLECTION_ITEMS;
+  const pageSize = capped ? Math.min(20, Math.max(5, options.maxItems!)) : 20;
   const items: ZhihuCollectionItem[] = [];
-  const pageSize = Math.min(20, Math.max(5, maxItems));
   let offset = 0;
   let total = 0;
 
-  while (items.length < maxItems) {
+  while (items.length < effectiveMax) {
     const endpoint = new URL(`https://www.zhihu.com/api/v4/collections/${collectionId}/contents`);
-    endpoint.searchParams.set("limit", String(Math.min(pageSize, maxItems - items.length)));
+    const pageLimit = capped ? Math.min(pageSize, effectiveMax - items.length) : pageSize;
+    endpoint.searchParams.set("limit", String(pageLimit));
     endpoint.searchParams.set("offset", String(offset));
 
     const parsed = zhihuResponseSchema.parse(await zhihuJson(endpoint, options.cookieHeader));

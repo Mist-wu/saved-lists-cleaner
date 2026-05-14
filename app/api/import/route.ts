@@ -11,7 +11,6 @@ const importRequestSchema = z.object({
   url: z.string().url().optional(),
   collectionId: z.string().min(1).optional(),
   collectionTitle: z.string().optional(),
-  limit: z.number().int().min(5).max(80).default(32),
 });
 
 export async function POST(request: Request) {
@@ -22,8 +21,8 @@ export async function POST(request: Request) {
     }
 
     const collection = input.collectionId
-      ? await fetchLoginCollection(input.collectionId, input.limit)
-      : await fetchZhihuPublicCollection(input.url!, input.limit);
+      ? await fetchLoginCollection(input.collectionId)
+      : await fetchZhihuPublicCollection(input.url!);
     const analyses = await analyzeItems(collection.items);
     const summary = buildRunSummary(analyses);
     const analysisById = new Map(analyses.map((item) => [item.platformItemId, item]));
@@ -85,7 +84,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function fetchLoginCollection(collectionId: string, limit: number) {
+async function fetchLoginCollection(collectionId: string) {
   const { cookieHeader } = await getZhihuSessionCookie();
-  return fetchZhihuCollectionContents(collectionId, { cookieHeader, maxItems: limit });
+  return fetchZhihuCollectionContents(collectionId, { cookieHeader });
 }
