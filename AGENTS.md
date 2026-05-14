@@ -233,6 +233,35 @@ Cloudflare：
 - 模型：`deepseek-v4-flash`
 - 当前 `.env` 中的 DEEPSEEK_API_KEY 可用。
 
+### Zhihu Official OAuth
+
+参考文档：`doc/zhihu-auth.md`。
+
+当前已知官方 OAuth 信息：
+
+- Base URL: `https://openapi.zhihu.com/`
+- 授权页：`GET https://openapi.zhihu.com/authorize?redirect_uri={redirect_uri}&app_id={app_id}&response_type=code&state={state}`
+- Token 交换：`POST https://openapi.zhihu.com/access_token`
+- Token 参数：`app_id`、`app_key`、`grant_type=authorization_code`、`redirect_uri`、`code`
+- Access Token 使用方式：`Authorization: Bearer {access_token}`
+- 用户信息：`GET https://openapi.zhihu.com/user`
+- 文档列出的社交关系接口：`/user/followers`、`/user/followed`、`/user/moments`
+- 生产回调地址建议：`https://mistwu.com/api/zhihu/oauth/callback`
+
+环境变量要求：
+
+- `APP_SECRET`：已在本地 `.env` 配置，用于加密本应用 session/token；不要把明文值写入 GitHub 或 AGENTS.md。
+- `ZHIHU_APP_ID`：知乎 OAuth app_id，待黑客松后台或商务渠道提供。
+- `ZHIHU_APP_KEY`：知乎 OAuth app_key，必须只放在 `.env` / `.env.production`，不要提交。
+- `ZHIHU_REDIRECT_URI`：建议配置为 `https://mistwu.com/api/zhihu/oauth/callback`，必须与知乎后台完全一致。
+
+实现注意：
+
+- 官方 OAuth 可替代当前“粘贴 Cookie”的登录身份验证：跳转授权 -> callback 换 token -> 调用 `/user` 获取用户信息 -> 写入本应用 session。
+- `doc/zhihu-auth.md` 当前没有列出官方收藏夹列表/收藏内容 endpoint。实现“获取用户收藏夹列表”前，需要确认黑客松是否额外开放收藏夹 scope/API。
+- 在官方收藏夹 API 未确认前，生产实现应保留现有 read-only adapter：官方 OAuth 负责用户登录，收藏夹读取暂时仍走已封装的 Zhihu collection adapter，后续拿到官方 endpoint 后替换 adapter 内部实现。
+- OAuth `state` 必须服务端生成并验证，防止 CSRF；token 交换必须在后端完成，access_token 只能加密保存，不能暴露到前端。
+
 ### Zhihu Favorites
 
 2026-05-13 本地验证：
