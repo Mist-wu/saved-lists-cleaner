@@ -156,10 +156,22 @@ async function listZhihuCollectionsFromEndpoint(initialUrl: string, cookieHeader
       break;
     }
 
-    endpoint = new URL(parsed.paging.next);
+    endpoint = resolveZhihuPagingUrl(parsed.paging.next);
   }
 
   return collections;
+}
+
+function resolveZhihuPagingUrl(next: string): URL {
+  try {
+    return new URL(next);
+  } catch {
+    try {
+      return new URL(next, "https://www.zhihu.com");
+    } catch {
+      throw new Error("知乎分页 next 链接无效，无法继续拉取收藏夹列表。");
+    }
+  }
 }
 
 export async function fetchZhihuCollectionContents(
@@ -256,6 +268,25 @@ function normalizeZhihuCollection(collection: z.infer<typeof zhihuCollectionSche
   };
 }
 
+/** 知乎接口常见 `//zhuanlan...` 或 `/question/...`，保证为绝对 http(s) URL，避免下游与浏览器解析异常。 */
+function normalizeZhihuContentUrl(raw: string | undefined): string {
+  const u = (raw ?? "").trim();
+  if (!u) return "https://www.zhihu.com";
+  if (u.startsWith("//")) return `https:${u}`;
+  if (u.startsWith("/")) {
+    try {
+      return new URL(u, "https://www.zhihu.com").href;
+    } catch {
+      return "https://www.zhihu.com";
+    }
+  }
+  try {
+    return new URL(u).href;
+  } catch {
+    return "https://www.zhihu.com";
+  }
+}
+
 function normalizeZhihuItem(item: z.infer<typeof zhihuItemSchema>): ZhihuCollectionItem {
   const content = asRecord(item.content);
   const target = Object.keys(content).length > 0 ? content : item;
@@ -274,7 +305,7 @@ function normalizeZhihuItem(item: z.infer<typeof zhihuItemSchema>): ZhihuCollect
     platformItemId: id,
     type: asString(target.type) ?? asString(item.type) ?? "unknown",
     title,
-    url: asString(target.url) ?? asString(item.url) ?? "",
+    url: normalizeZhihuContentUrl(asString(target.url) ?? asString(item.url)),
     excerpt: asString(target.excerpt) ?? asString(item.excerpt) ?? "",
     authorName: asString(author.name) ?? "",
     voteupCount: asNumber(target.voteup_count) ?? 0,
