@@ -182,6 +182,7 @@ export async function fetchZhihuCollectionContents(
   const effectiveMax = capped ? options.maxItems! : SAFETY_MAX_COLLECTION_ITEMS;
   const pageSize = capped ? Math.min(20, Math.max(5, options.maxItems!)) : 20;
   const items: ZhihuCollectionItem[] = [];
+  const seenIds = new Set<string>();
   let offset = 0;
   let total = 0;
 
@@ -193,7 +194,11 @@ export async function fetchZhihuCollectionContents(
 
     const parsed = zhihuResponseSchema.parse(await zhihuJson(endpoint, options.cookieHeader));
     total = parsed.paging.totals;
-    items.push(...parsed.data.map(normalizeZhihuItem));
+    for (const row of parsed.data.map(normalizeZhihuItem)) {
+      if (seenIds.has(row.platformItemId)) continue;
+      seenIds.add(row.platformItemId);
+      items.push(row);
+    }
 
     if (parsed.paging.is_end || parsed.data.length === 0) {
       break;
