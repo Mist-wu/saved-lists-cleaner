@@ -2,6 +2,7 @@
   "name": "saved-lists-cleaner",
   "version": "0.1.0",
   "description": "Read-only Zhihu public collection import, AI triage, and cleanup workspace.",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {
