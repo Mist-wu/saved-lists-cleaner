@@ -2,28 +2,38 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { analyzeItems, buildRunSummary } from "@/lib/analysis";
 import { prisma } from "@/lib/prisma";
-import { fetchZhihuPublicCollection } from "@/lib/zhihu";
+import { getZhihuSessionCookie } from "@/lib/session";
+import { fetchZhihuCollectionContents, fetchZhihuPublicCollection } from "@/lib/zhihu";
 
 export const runtime = "nodejs";
 
 const importRequestSchema = z.object({
-  url: z.string().url(),
+  url: z.string().url().optional(),
+  collectionId: z.string().min(1).optional(),
+  collectionTitle: z.string().optional(),
   limit: z.number().int().min(5).max(80).default(32),
 });
 
 export async function POST(request: Request) {
   try {
     const input = importRequestSchema.parse(await request.json());
-    const collection = await fetchZhihuPublicCollection(input.url, input.limit);
+    if (!input.url && !input.collectionId) {
+      throw new Error("请提供公开收藏夹 URL，或先登录后选择收藏夹。");
+    }
+
+    const collection = input.collectionId
+      ? await fetchLoginCollection(input.collectionId, input.limit)
+      : await fetchZhihuPublicCollection(input.url!, input.limit);
     const analyses = await analyzeItems(collection.items);
     const summary = buildRunSummary(analyses);
     const analysisById = new Map(analyses.map((item) => [item.platformItemId, item]));
 
     const run = await prisma.importRun.create({
       data: {
-        originalUrl: input.url,
+        source: input.collectionId ? "zhihu_login" : "zhihu_public",
+        originalUrl: input.url ?? `https://www.zhihu.com/collection/${collection.collectionId}`,
         collectionId: collection.collectionId,
-        title: `知乎收藏夹 ${collection.collectionId}`,
+        title: input.collectionTitle || `知乎收藏夹 ${collection.collectionId}`,
         itemCount: collection.items.length,
         analyzedCount: analyses.length,
         healthScore: summary.healthScore,
@@ -73,4 +83,9 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "导入失败";
     return NextResponse.json({ error: message }, { status: 400 });
   }
+}
+
+async function fetchLoginCollection(collectionId: string, limit: number) {
+  const { cookieHeader } = await getZhihuSessionCookie();
+  return fetchZhihuCollectionContents(collectionId, { cookieHeader, maxItems: limit });
 }

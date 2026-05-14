@@ -299,3 +299,9 @@ Cloudflare：
 - 线上点击测试通过：访问 `http://178.128.90.49`，点击“开始导入”，页面展示体检报告和清理工作台。
 - 线上数据库写入验证通过：PostgreSQL 中 `ImportRun=2`、`SavedItem=24`，最近两次导入均为 `itemCount=12`、`analyzedCount=12`。
 - 线上容器状态：`app-app-1` 暴露 `80->3000`，`app-postgres-1` healthy；app 容器内 OpenSSL 已存在，Prisma OpenSSL warning 已消除。
+
+### 2026-05-14
+
+- 新当前执行目标：用户登录知乎 -> 获取用户的收藏夹列表 -> 用户选择要导入的收藏夹。
+- 实现方式仍为 read-only MVP：用户在页面粘贴已登录知乎浏览器 Cookie，本应用校验 `/api/v4/me`，将 Cookie 用 `APP_SECRET` 加密保存为本应用 HTTP-only session。
+- 已开始实现后端登录态链路：`/api/zhihu/login` 保存知乎登录态，`/api/zhihu/collections` 读取收藏夹列表，`/api/import` 支持登录态收藏夹 ID 导入，同时保留公开收藏夹 URL fallback。

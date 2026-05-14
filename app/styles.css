@@ -26,11 +26,17 @@ label {
   font-weight: 600;
 }
 
-input {
+input,
+textarea {
   width: 100%;
   max-width: 720px;
   padding: 8px;
   border: 1px solid #aaa;
+  font: inherit;
+}
+
+textarea {
+  min-height: 96px;
 }
 
 button {
@@ -52,4 +58,21 @@ li {
 
 a {
   color: #0645ad;
+}
+
+fieldset {
+  max-width: 760px;
+  margin: 16px 0 0;
+  border: 1px solid #bbb;
+}
+
+.choice {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-weight: 400;
+}
+
+.choice input {
+  width: auto;
 }

@@ -26,6 +26,20 @@ model ImportRun {
   @@index([collectionId])
 }
 
+model ZhihuSession {
+  id              String   @id @default(cuid())
+  viewerId        String?
+  viewerName      String?
+  urlToken        String?
+  encryptedCookie String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastUsedAt      DateTime @default(now())
+
+  @@index([urlToken])
+  @@index([updatedAt])
+}
+
 model SavedItem {
   id               String    @id @default(cuid())
   runId            String

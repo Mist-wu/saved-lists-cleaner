@@ -22,6 +22,7 @@ type ImportResponse = {
     id: string;
     originalUrl: string;
     collectionId: string;
+    title: string | null;
     itemCount: number;
     analyzedCount: number;
     healthScore: number;
@@ -35,6 +36,20 @@ type ImportResponse = {
   };
 };
 
+type ZhihuViewer = {
+  id: string;
+  name: string;
+  urlToken: string;
+};
+
+type ZhihuCollection = {
+  id: string;
+  title: string;
+  description: string;
+  itemCount: number;
+  url: string;
+};
+
 const actionLabels: Record<string, string> = {
   delete: "建议删除",
   skim: "建议速读",
@@ -46,13 +61,18 @@ const actionLabels: Record<string, string> = {
 };
 
 export default function Home() {
+  const [cookieHeader, setCookieHeader] = useState("");
+  const [viewer, setViewer] = useState<ZhihuViewer | null>(null);
+  const [collections, setCollections] = useState<ZhihuCollection[]>([]);
+  const [selectedCollectionId, setSelectedCollectionId] = useState("");
   const [url, setUrl] = useState("https://www.zhihu.com/collection/21827231");
   const [limit, setLimit] = useState(12);
   const [filter, setFilter] = useState("all");
   const [result, setResult] = useState<ImportResponse | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState("");
   const [error, setError] = useState("");
 
+  const selectedCollection = collections.find((collection) => collection.id === selectedCollectionId);
   const items = useMemo(() => result?.run.items ?? [], [result]);
   const filteredItems = useMemo(() => {
     if (filter === "all") return items;
@@ -64,15 +84,75 @@ export default function Home() {
     ["delete", "skim", "outdated", "duplicate"].includes(item.aiAction),
   ).length;
 
-  async function importCollection() {
-    setLoading(true);
+  async function saveZhihuLogin() {
+    setLoading("login");
+    setError("");
+
+    try {
+      const response = await fetch("/api/zhihu/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cookieHeader }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "知乎登录失败");
+      }
+      setViewer(data.viewer);
+      setCookieHeader("");
+      await loadCollections();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "知乎登录失败");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function loadCollections() {
+    setLoading("collections");
+    setError("");
+
+    try {
+      const response = await fetch("/api/zhihu/collections");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "获取收藏夹失败");
+      }
+      setViewer(data.viewer);
+      setCollections(data.collections);
+      setSelectedCollectionId(data.collections[0]?.id ?? "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "获取收藏夹失败");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function importSelectedCollection() {
+    if (!selectedCollection) {
+      setError("请先选择一个知乎收藏夹。");
+      return;
+    }
+
+    await importCollection({
+      collectionId: selectedCollection.id,
+      collectionTitle: selectedCollection.title,
+    });
+  }
+
+  async function importPublicCollection() {
+    await importCollection({ url });
+  }
+
+  async function importCollection(payload: { url?: string; collectionId?: string; collectionTitle?: string }) {
+    setLoading("import");
     setError("");
 
     try {
       const response = await fetch("/api/import", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url, limit }),
+        body: JSON.stringify({ ...payload, limit }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -83,25 +163,67 @@ export default function Home() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "导入失败");
     } finally {
-      setLoading(false);
+      setLoading("");
     }
   }
 
   return (
     <main>
       <h1>Saved Lists Cleaner</h1>
-      <p>公开知乎收藏夹 URL 导入，DeepSeek 分析，PostgreSQL 保存。当前版本只读，不做删除写操作。</p>
+      <p>知乎登录态读取收藏夹列表，用户选择后导入并用 DeepSeek 分析。当前版本只读，不做删除写操作。</p>
 
       <section>
-        <h2>导入</h2>
-        <label htmlFor="collection-url">知乎公开收藏夹 URL</label>
-        <input
-          id="collection-url"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          placeholder="https://www.zhihu.com/collection/21827231"
+        <h2>1. 登录知乎</h2>
+        <p>从已登录知乎的浏览器复制 Cookie 请求头，保存后服务器会加密存储，只用于 read-only 导入。</p>
+        <label htmlFor="zhihu-cookie">知乎 Cookie</label>
+        <textarea
+          id="zhihu-cookie"
+          value={cookieHeader}
+          onChange={(event) => setCookieHeader(event.target.value)}
+          placeholder="z_c0=...; _xsrf=..."
+          rows={4}
         />
+        <button onClick={saveZhihuLogin} disabled={loading === "login" || !cookieHeader.trim()}>
+          {loading === "login" ? "正在验证知乎登录态..." : "保存登录态"}
+        </button>
+        {viewer ? (
+          <p>
+            当前知乎用户：{viewer.name} / {viewer.urlToken}
+          </p>
+        ) : null}
+      </section>
 
+      <section>
+        <h2>2. 选择收藏夹</h2>
+        <button onClick={loadCollections} disabled={loading === "collections"}>
+          {loading === "collections" ? "正在获取收藏夹..." : "获取收藏夹列表"}
+        </button>
+
+        {collections.length > 0 ? (
+          <fieldset>
+            <legend>收藏夹列表</legend>
+            {collections.map((collection) => (
+              <label key={collection.id} className="choice">
+                <input
+                  type="radio"
+                  name="collection"
+                  value={collection.id}
+                  checked={selectedCollectionId === collection.id}
+                  onChange={() => setSelectedCollectionId(collection.id)}
+                />
+                <span>
+                  {collection.title} / ID {collection.id} / {collection.itemCount} 条
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        ) : (
+          <p>登录后点击获取收藏夹列表。</p>
+        )}
+      </section>
+
+      <section>
+        <h2>3. 导入并分析</h2>
         <label htmlFor="limit">导入数量</label>
         <input
           id="limit"
@@ -112,8 +234,20 @@ export default function Home() {
           onChange={(event) => setLimit(Number(event.target.value))}
         />
 
-        <button onClick={importCollection} disabled={loading}>
-          {loading ? "正在导入并分析..." : "开始导入"}
+        <button onClick={importSelectedCollection} disabled={loading === "import" || !selectedCollection}>
+          {loading === "import" ? "正在导入并分析..." : "导入选中收藏夹"}
+        </button>
+
+        <h3>公开收藏夹 URL fallback</h3>
+        <label htmlFor="collection-url">知乎公开收藏夹 URL</label>
+        <input
+          id="collection-url"
+          value={url}
+          onChange={(event) => setUrl(event.target.value)}
+          placeholder="https://www.zhihu.com/collection/21827231"
+        />
+        <button onClick={importPublicCollection} disabled={loading === "import"}>
+          公开 URL 导入
         </button>
 
         {error ? <p role="alert">错误：{error}</p> : null}
@@ -123,6 +257,7 @@ export default function Home() {
         <>
           <section>
             <h2>体检报告</h2>
+            <p>收藏夹：{result.run.title ?? result.run.collectionId}</p>
             <p>收藏夹 ID：{result.run.collectionId}</p>
             <p>知乎返回总数：{result.totals.zhihuTotal}</p>
             <p>本次导入：{result.totals.imported}</p>
