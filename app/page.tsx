@@ -65,7 +65,6 @@ export default function Home() {
   const [viewer, setViewer] = useState<ZhihuViewer | null>(null);
   const [collections, setCollections] = useState<ZhihuCollection[]>([]);
   const [selectedCollectionId, setSelectedCollectionId] = useState("");
-  const [url, setUrl] = useState("https://www.zhihu.com/collection/21827231");
   const [filter, setFilter] = useState("all");
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [loading, setLoading] = useState("");
@@ -141,11 +140,7 @@ export default function Home() {
     });
   }
 
-  async function importPublicCollection() {
-    await importCollection({ url });
-  }
-
-  async function importCollection(payload: { url?: string; collectionId?: string; collectionTitle?: string }) {
+  async function importCollection(payload: { collectionId: string; collectionTitle?: string }) {
     setLoading("import");
     setError("");
 
@@ -224,18 +219,6 @@ export default function Home() {
         <h2>3. 导入并分析</h2>
         <button onClick={importSelectedCollection} disabled={loading === "import" || !selectedCollection}>
           {loading === "import" ? "正在导入并分析..." : "导入选中收藏夹"}
-        </button>
-
-        <h3>公开收藏夹 URL fallback</h3>
-        <label htmlFor="collection-url">知乎公开收藏夹 URL</label>
-        <input
-          id="collection-url"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          placeholder="https://www.zhihu.com/collection/21827231"
-        />
-        <button onClick={importPublicCollection} disabled={loading === "import"}>
-          公开 URL 导入
         </button>
 
         {error ? <p role="alert">错误：{error}</p> : null}
